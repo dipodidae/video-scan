@@ -153,6 +153,8 @@ scanFolder()
 {
 
     local FOLDER
+    local EXTENSIONS=(mp4 mpg avi)
+
 
     if [ -z "${1}" ]; then
         FOLDER=`pwd`
@@ -164,10 +166,12 @@ scanFolder()
 
     printInfo "Scanning '$(tput smul)${FOLDER}$COLOR_RESET'"
 
-    for VIDEO_FILE in ${1}/**/*; do
-        if [[ -f "${VIDEO_FILE}" ]]; then
-            dvr-scan -i ${VIDEO_FILE} -so -t .5
-        fi
+    for EXTENSION in EXTENSIONS; do
+        for VIDEO_FILE in ${1}/**/*.${EXTENSION}; do
+            if [[ -f "${VIDEO_FILE}" ]]; then
+                dvr-scan -i ${VIDEO_FILE} -so -t .5
+            fi
+        done
     done
 }
 
