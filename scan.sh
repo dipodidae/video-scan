@@ -131,7 +131,7 @@ checkAndInstallPipPackages()
     local requirements=(dvr-scan opencv-python)
 
     for requirement in "${requirements[@]}"; do
-        if [[ ! $(which ${requirement}) ]]; then
+        if ! sudo pip3 show ${requirement} > /dev/null; then
             if ! sudo pip3 install ${requirement}; then
                 requirementsMet=0
                 printWarning "${requirement} not installed"
@@ -142,8 +142,10 @@ checkAndInstallPipPackages()
     done
 
     if [[ ! $requirementsMet == 1 ]]; then
-        printError "Not all requirements met"
+        printError "Required python packages are missing"
         return 20
+    else
+        printError "Got all required python packages"
     fi
 }
 
