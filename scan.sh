@@ -170,19 +170,18 @@ checkAndInstallPipPackages()
 scanFolder()
 {
 
-    local EXTENSIONS=(mp4 mpg avi)
+    local FILE_EXTENSIONS=(mp4 mpg avi)
 
     shopt -s globstar lastpipe
 
     printInfo "Scanning '$(tput smul)${FOLDER_TO_SCAN}$COLOR_RESET'"
-
-    for EXTENSION in EXTENSIONS; do
-        for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.${EXTENSION}; do
-            if [[ -f "${VIDEO_FILE}" ]]; then
-                dvr-scan -i ${VIDEO_FILE} -so -t .5
-            fi
-        done
+ 
+    for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.mp4; do
+        if [[ -f "${VIDEO_FILE}" ]]; then
+            dvr-scan -i ${VIDEO_FILE} -so -t .5
+        fi
     done
+
 }
 
 main "$@"
