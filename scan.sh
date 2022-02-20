@@ -145,7 +145,7 @@ checkAndInstallPipPackages()
         printError "Required python packages are missing"
         return 20
     else
-        printError "Got all required python packages"
+        printSuccess "Got all required python packages"
     fi
 }
 
