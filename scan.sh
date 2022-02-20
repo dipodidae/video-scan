@@ -23,6 +23,8 @@ MESSAGE_ICON_INFO="${COLOR_BACKGROUND_WHITE}${COLOR_TEXT_BLACK} i ${COLOR_RESET}
 MESSAGE_ICON_TICK="${COLOR_BACKGROUND_GREEN}${COLOR_TEXT_BLACK} ✓ ${COLOR_RESET}"
 MESSAGE_ICON_WARN="${COLOR_BACKGROUND_YELLOW}${COLOR_TEXT_BLACK} ⚠ ${COLOR_RESET}"
 
+FOLDER_TO_SCAN=`pwd`
+
 printError()
 {
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_CROSS}" "${COLOR_TEXT_RED}${1}${COLOR_RESET}"
@@ -51,16 +53,32 @@ printLine()
 main()
 {
     (
+        setFolder "${1}"
         showIntro
         checkAndInstallAptPackages
         checkAndInstallPipPackages
-        scanFolder "${1}"
+        scanFolder
     )
 
     if [ $? -eq 0 ]; then
         printSuccess "Done!"
     else
         printError "Something went wrong..."
+    fi
+}
+
+setFolder()
+{
+    if [ -z "${1}" ]; then
+        printInfo "Folder is set to current directory: ${FOLDER_TO_SCAN}"
+    else
+        FOLDER_TO_SCAN="${1}"
+        if [ -d "${FOLDER_TO_SCAN}" ]; then
+            printInfo "Folder is set to: ${FOLDER_TO_SCAN}"
+        else
+            printError "Folder (${FOLDER_TO_SCAN}) does not exist"
+            return 20
+        fi
     fi
 }
 
@@ -152,22 +170,14 @@ checkAndInstallPipPackages()
 scanFolder()
 {
 
-    local FOLDER
     local EXTENSIONS=(mp4 mpg avi)
-
-
-    if [ -z "${1}" ]; then
-        FOLDER=`pwd`
-    else
-        FOLDER="${1}"
-    fi
 
     shopt -s globstar lastpipe
 
-    printInfo "Scanning '$(tput smul)${FOLDER}$COLOR_RESET'"
+    printInfo "Scanning '$(tput smul)${FOLDER_TO_SCAN}$COLOR_RESET'"
 
     for EXTENSION in EXTENSIONS; do
-        for VIDEO_FILE in ${1}/**/*.${EXTENSION}; do
+        for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.${EXTENSION}; do
             if [[ -f "${VIDEO_FILE}" ]]; then
                 dvr-scan -i ${VIDEO_FILE} -so -t .5
             fi
