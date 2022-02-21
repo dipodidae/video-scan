@@ -76,13 +76,9 @@ main()
 
 setFolder()
 {
-    if [ -z "${1}" ]; then
-        printInfo "Folder is set to current directory: ${FOLDER_TO_SCAN}"
-    else
+    if [ ! -z "${1}" ]; then
         FOLDER_TO_SCAN="${1}"
-        if [ -d "${FOLDER_TO_SCAN}" ]; then
-            printInfo "Folder is set to: ${FOLDER_TO_SCAN}"
-        else
+        if [ ! -d "${FOLDER_TO_SCAN}" ]; then
             printError "Folder (${FOLDER_TO_SCAN}) does not exist"
             return 20
         fi
@@ -116,8 +112,6 @@ ${COLOR_BACKGROUND_BLUE}${COLOR_TEXT_BLACK}        VIDEO FILE SCANNER        ${C
 checkAndInstallAptPackages()
 {
 
-    printInfo "Updating apt packages"
-
     local requirementsMet=1
     local requirements=(python3 tput)
     local apt_updated=0
@@ -125,14 +119,16 @@ checkAndInstallAptPackages()
     for requirement in "${requirements[@]}"; do
         if [[ ! $(which ${requirement}) ]]; then
             if [[ ! $apt_updated == 1 ]]; then
-                updateAptPackages
+                if ! sudo apt-get update > /dev/null; then
+                    printError "Error updating packages"
+                else
+                    apt_updated=1
+                fi
             fi
 
             if ! sudo apt-get install ${requirement} -y > /dev/null; then
                 requirementsMet=0
                 printWarning "${requirement} not installed"
-            else
-                printSuccess "installed ${requirement}"
             fi
         fi
     done
@@ -140,25 +136,11 @@ checkAndInstallAptPackages()
     if [[ ! $requirementsMet == 1 ]]; then
         printError "Not all requirements met"
         return 20
-    else
-        printSuccess "Got all required apt packages"
-    fi
-}
-
-updateAptPackages()
-{
-    if ! sudo apt-get update > /dev/null; then
-        printError "Error updating packages"
-    else
-        apt_updated=1
-        printSuccess "Updated packages"
     fi
 }
 
 checkAndInstallPipPackages()
 {
-    printInfo "Updating pip"
-
     local requirementsMet=1
     local requirements=(dvr-scan opencv-python)
 
@@ -176,8 +158,6 @@ checkAndInstallPipPackages()
     if [[ ! $requirementsMet == 1 ]]; then
         printError "Required python packages are missing"
         return 20
-    else
-        printSuccess "Got all required python packages"
     fi
 }
 
