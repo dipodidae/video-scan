@@ -60,8 +60,8 @@ main()
     fi
 
     (
-        setFolder "${1}"
         showIntro
+        setFolder "${1}"
         checkAndInstallAptPackages
         checkAndInstallPipPackages
         scanFolder
