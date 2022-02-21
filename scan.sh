@@ -122,12 +122,7 @@ checkAndInstallAptPackages()
     for requirement in "${requirements[@]}"; do
         if [[ ! $(which ${requirement}) ]]; then
             if [[ ! $apt_updated == 1 ]]; then
-                if ! sudo apt-get update > /dev/null; then
-                    printError "Error updating packages"
-                else
-                    apt_updated=1
-                    printSuccess "Updated packages"
-                fi
+                updateAptPackages
             fi
 
             if ! sudo apt-get install ${requirement} -y > /dev/null; then
@@ -142,6 +137,18 @@ checkAndInstallAptPackages()
     if [[ ! $requirementsMet == 1 ]]; then
         printError "Not all requirements met"
         return 20
+    else
+        printSuccess "Got all required apt packages"
+    fi
+}
+
+updateAptPackages()
+{
+    if ! sudo apt-get update > /dev/null; then
+        printError "Error updating packages"
+    else
+        apt_updated=1
+        printSuccess "Updated packages"
     fi
 }
 
@@ -178,11 +185,9 @@ scanFolder()
 
     shopt -s globstar lastpipe
 
-    printInfo "Scanning '$(tput smul)${FOLDER_TO_SCAN}$COLOR_RESET'"
- 
     for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.mp4; do
         if [[ -f "${VIDEO_FILE}" ]]; then
-            printInfo "Scanning file :${VIDEO_FILE}"
+            printInfo "Scanning file: ${VIDEO_FILE}"
             dvr-scan -i ${VIDEO_FILE} -so -t .5 | tee -a output.txt
             printf "\\n\\n"
         fi
