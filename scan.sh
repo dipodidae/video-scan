@@ -52,6 +52,10 @@ printLine()
 
 main()
 {
+    if [ -f output.txt ]; then
+        rm output.txt
+    fi
+
     (
         setFolder "${1}"
         showIntro
@@ -179,7 +183,7 @@ scanFolder()
     for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.mp4; do
         if [[ -f "${VIDEO_FILE}" ]]; then
             printInfo "Scanning file :${VIDEO_FILE}"
-            dvr-scan -i ${VIDEO_FILE} -so -t .5
+            dvr-scan -i ${VIDEO_FILE} -so -t .5 | tee -a output.txt
             printf "\\n\\n"
         fi
     done
