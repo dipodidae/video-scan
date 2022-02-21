@@ -9,6 +9,7 @@ COLOR_TEXT_GREEN=$(tput setaf 2)
 COLOR_TEXT_RED=$(tput setaf 1)
 COLOR_TEXT_WHITE=$(tput setaf 7)
 COLOR_TEXT_YELLOW=$(tput setaf 3)
+COLOR_TEXT_GREY=$(tput setaf 8)
 
 COLOR_BACKGROUND_BLUE=$(tput setab 4)
 COLOR_BACKGROUND_GREEN=$(tput setab 2)
@@ -16,7 +17,9 @@ COLOR_BACKGROUND_RED=$(tput setab 1)
 COLOR_BACKGROUND_WHITE=$(tput setab 7)
 COLOR_BACKGROUND_YELLOW=$(tput setab 3)
 
-MESSAGE_TEMPLATE="  $(tput bold)%b  %s\\n"
+MESSAGE_TEMPLATE="\\n${COLOR_TEXT_GREY}╔════════════════════════════════╗\\n
+║${COLOR_RESET}  $(tput bold)%b  %s\\n
+${COLOR_TEXT_GREY}╚════════════════════════════════╝${COLOR_RESET}\\n"
 
 MESSAGE_ICON_CROSS="${COLOR_BACKGROUND_RED}${COLOR_TEXT_WHITE} ✗ ${COLOR_RESET}"
 MESSAGE_ICON_INFO="${COLOR_BACKGROUND_WHITE}${COLOR_TEXT_BLACK} i ${COLOR_RESET}"
