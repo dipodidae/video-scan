@@ -116,18 +116,16 @@ ${COLOR_BACKGROUND_BLUE}${COLOR_TEXT_BLACK}        VIDEO FILE SCANNER        ${C
 
 checkAndInstallAptPackages()
 {
-
-    local requirementsAreMet=1
     declare -A requirements=( \
         [python3]=python3\
         [pip3]=python3-pip \
         [tput]=tput \
     )
+    
+    local requirementsAreMet=1
     local aptIsUpdated=0
 
-    printInfo "Checking apt packages"
-
-    for bin in "${requirements[@]}"; do
+    for bin in "${!requirements[@]}"; do
         local requirement=${requirements[$bin]}
         if [[ ! $(which ${bin}) ]]; then
             printInfo "Installing ${requirement}"
@@ -140,8 +138,6 @@ checkAndInstallAptPackages()
                 requirementsAreMet=0
                 printWarning "${requirement} not installed"
             fi
-        else
-            printInfo "${requirement} already installed"
         fi
     done
 
