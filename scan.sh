@@ -17,14 +17,19 @@ COLOR_BACKGROUND_RED=$(tput setab 1)
 COLOR_BACKGROUND_WHITE=$(tput setab 7)
 COLOR_BACKGROUND_YELLOW=$(tput setab 3)
 
-MESSAGE_TEMPLATE="\\n${COLOR_TEXT_GREY}╔════════════════════════════════╗\\n
+MESSAGE_TEMPLATE="\\n${COLOR_TEXT_GREY}╔══════════════════════════════════════════╗\\n
 ║${COLOR_RESET}  $(tput bold)%b  %s\\n
-${COLOR_TEXT_GREY}╚════════════════════════════════╝${COLOR_RESET}\\n"
+${COLOR_TEXT_GREY}╚══════════════════════════════════════════╝${COLOR_RESET}\\n\\n"
 
-MESSAGE_ICON_CROSS="${COLOR_BACKGROUND_RED}${COLOR_TEXT_WHITE} ✗ ${COLOR_RESET}"
-MESSAGE_ICON_INFO="${COLOR_BACKGROUND_WHITE}${COLOR_TEXT_BLACK} i ${COLOR_RESET}"
-MESSAGE_ICON_TICK="${COLOR_BACKGROUND_GREEN}${COLOR_TEXT_BLACK} ✓ ${COLOR_RESET}"
-MESSAGE_ICON_WARN="${COLOR_BACKGROUND_YELLOW}${COLOR_TEXT_BLACK} ⚠ ${COLOR_RESET}"
+parseMessageIcon()
+{
+    echo "${COLOR_BACKGROUND_WHITE}${COLOR_TEXT_BLACK}  ${1}  ${COLOR_RESET}"
+}
+
+MESSAGE_ICON_CROSS=$(parseMessageIcon "❌")
+MESSAGE_ICON_INFO=$(parseMessageIcon "ℹ️")
+MESSAGE_ICON_TICK=$(parseMessageIcon "✅")
+MESSAGE_ICON_WARN=$(parseMessageIcon "⚠️")
 
 FOLDER_TO_SCAN=`pwd`
 
@@ -112,28 +117,35 @@ ${COLOR_BACKGROUND_BLUE}${COLOR_TEXT_BLACK}        VIDEO FILE SCANNER        ${C
 checkAndInstallAptPackages()
 {
 
-    local requirementsMet=1
-    local requirements=(python3 tput)
-    local apt_updated=0
+    local requirementsAreMet=1
+    declare -A requirements=( \
+        [python3]=python3\
+        [pip3]=python3-pip \
+        [tput]=tput \
+    )
+    local aptIsUpdated=0
 
-    for requirement in "${requirements[@]}"; do
-        if [[ ! $(which ${requirement}) ]]; then
-            if [[ ! $apt_updated == 1 ]]; then
-                if ! sudo apt-get update > /dev/null; then
-                    printError "Error updating packages"
-                else
-                    apt_updated=1
-                fi
+    printInfo "Checking apt packages"
+
+    for bin in "${requirements[@]}"; do
+        local requirement=${requirements[$bin]}
+        if [[ ! $(which ${bin}) ]]; then
+            printInfo "Installing ${requirement}"
+            if [[ ! $aptIsUpdated == 1 ]]; then
+                printInfo "Updating apt"
+                sudo apt-get update > /dev/null
             fi
 
             if ! sudo apt-get install ${requirement} -y > /dev/null; then
-                requirementsMet=0
+                requirementsAreMet=0
                 printWarning "${requirement} not installed"
             fi
+        else
+            printInfo "${requirement} already installed"
         fi
     done
 
-    if [[ ! $requirementsMet == 1 ]]; then
+    if [[ ! $requirementsAreMet == 1 ]]; then
         printError "Not all requirements met"
         return 20
     fi
@@ -141,6 +153,8 @@ checkAndInstallAptPackages()
 
 checkAndInstallPipPackages()
 {
+    printInfo "Checking pip packages"
+
     local requirementsMet=1
     local requirements=(dvr-scan opencv-python)
 
@@ -163,6 +177,7 @@ checkAndInstallPipPackages()
 
 scanFolder()
 {
+    printInfo "Scanning folder"
 
     local FILE_EXTENSIONS=(mp4 mpg avi)
 
