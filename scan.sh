@@ -120,8 +120,10 @@ checkAndInstallAptPackages()
         [python3]=python3\
         [pip3]=python3-pip \
         [tput]=tput \
+        [ffmpeg]=ffmpeg \
+        [whiptail]=whiptail \
     )
-    
+
     local requirementsAreMet=1
     local aptIsUpdated=0
 
@@ -152,15 +154,16 @@ checkAndInstallPipPackages()
     printInfo "Checking pip packages"
 
     local requirementsMet=1
-    local requirements=(dvr-scan opencv-python)
+    declare -A requirements=( \
+        [dvr-scan]="dvr-scan[opencv-headless]"\
+    )
 
-    for requirement in "${requirements[@]}"; do
-        if ! sudo pip3 show ${requirement} > /dev/null; then
-            if ! sudo pip3 install ${requirement}; then
+    for bin in "${!requirements[@]}"; do
+        local requirement=${requirements[$bin]}
+        if ! sudo pip3 show ${bin}; then
+            if ! sudo pip3 install --upgrade ${requirement}; then
                 requirementsMet=0
                 printWarning "${requirement} not installed"
-            else
-                printSuccess "installed ${requirement}"
             fi
         fi
     done
@@ -182,7 +185,7 @@ scanFolder()
     for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.mp4; do
         if [[ -f "${VIDEO_FILE}" ]]; then
             printInfo "Scanning file: ${VIDEO_FILE}"
-            dvr-scan -i ${VIDEO_FILE} -so -t .5 | tee -a output.txt
+            dvr-scan -i ${VIDEO_FILE} -t .5 -m ffmpeg
             printf "\\n\\n"
         fi
     done
