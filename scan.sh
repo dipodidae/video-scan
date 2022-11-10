@@ -121,7 +121,6 @@ checkAndInstallAptPackages()
         [pip3]=python3-pip \
         [tput]=tput \
         [ffmpeg]=ffmpeg \
-        [whiptail]=whiptail \
     )
 
     local requirementsAreMet=1
@@ -183,10 +182,18 @@ scanFolder()
     shopt -s globstar lastpipe
 
     for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.mp4; do
-        if [[ -f "${VIDEO_FILE}" ]]; then
+        local scan_succesful_log_file="${VIDEO_FILE}.scan-succesful"
+        if [[ -f "${VIDEO_FILE}" ]] && [[ ! -f "${scan_succesful_log_file}" ]]; then
             printInfo "Scanning file: ${VIDEO_FILE}"
-            dvr-scan -i ${VIDEO_FILE} -t .5 -m ffmpeg
+            if dvr-scan -i "${VIDEO_FILE}" -t .5 -m ffmpeg; then
+                printSuccess "Succesfully scanned ${VIDEO_FILE}"
+                touch "${scan_succesful_log_file}"
+            else
+                printError "Error scanning video file ${VIDEO_FILE}"
+            fi
             printf "\\n\\n"
+        else
+            printWarning "${VIDEO_FILE} already scanned, skipping"
         fi
     done
 
