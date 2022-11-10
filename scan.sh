@@ -131,11 +131,10 @@ checkAndInstallAptPackages()
         if [[ ! $(which ${bin}) ]]; then
             printInfo "Installing ${requirement}"
             if [[ ! $aptIsUpdated == 1 ]]; then
-                printInfo "Updating apt"
-                sudo apt-get update > /dev/null
+                sudo apt-get -qq update
             fi
 
-            if ! sudo apt-get install ${requirement} -y > /dev/null; then
+            if ! sudo apt-get -qq install ${requirement} -y; then
                 requirementsAreMet=0
                 printWarning "${requirement} not installed"
             fi
@@ -150,8 +149,6 @@ checkAndInstallAptPackages()
 
 checkAndInstallPipPackages()
 {
-    printInfo "Checking pip packages"
-
     local requirementsMet=1
     declare -A requirements=( \
         [dvr-scan]="dvr-scan[opencv-headless]"\
@@ -160,9 +157,8 @@ checkAndInstallPipPackages()
     for bin in "${!requirements[@]}"; do
         local requirement=${requirements[$bin]}
         if ! sudo pip3 show ${bin}; then
-            if ! sudo pip3 install --upgrade ${requirement}; then
+            if ! sudo pip3 install --upgrade -q ${requirement}; then
                 requirementsMet=0
-                printWarning "${requirement} not installed"
             fi
         fi
     done
@@ -181,7 +177,8 @@ scanFile()
         -i "$1" \
         -t .5 \
         -m ffmpeg \
-        --output-dir "${directory}/_output"
+        --output-dir "${directory}/_output" \
+        -q
 }
 
 getSuccesfullLogFileLocation()
@@ -195,17 +192,14 @@ shouldScanFile()
     local scan_succesful_log_file=$(getSuccesfullLogFileLocation "${1}")
 
     if [[ ! -f "${1}" ]]; then
-        printWarning "${1} does not exist"
         return 1
     fi
 
     if [[ -f "${scan_succesful_log_file}" ]]; then
-        printWarning "${1} is already scanned"
         return 1
     fi
 
     if [[ $(dirname "${1}") ==  *_output ]]; then
-        printWarning "${1} is an output file"
         return 1
     fi
 
@@ -225,7 +219,6 @@ scanFolder()
         if shouldScanFile "${VIDEO_FILE}"; then
             printInfo "Scanning file: ${VIDEO_FILE}"
             if scanFile "${VIDEO_FILE}"; then
-                printSuccess "Succesfully scanned ${VIDEO_FILE}"
                 touch "${scan_succesful_log_file}"
             else
                 printError "Error scanning video file ${VIDEO_FILE}"
