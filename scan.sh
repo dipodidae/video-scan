@@ -173,6 +173,45 @@ checkAndInstallPipPackages()
     fi
 }
 
+scanFile()
+{
+    local directory="$(dirname "${1}")"
+
+    dvr-scan \
+        -i "$1" \
+        -t .5 \
+        -m ffmpeg \
+        --output-dir "${directory}/_output"
+}
+
+getSuccesfullLogFileLocation()
+{
+    local scan_succesful_log_file="${1}.scan-successful"
+    echo "${scan_succesful_log_file}"
+}
+
+shouldScanFile()
+{
+    local scan_succesful_log_file=$(getSuccesfullLogFileLocation "${1}")
+
+    if [[ ! -f "${1}" ]]; then
+        printWarning "${1} does not exist"
+        return 1
+    fi
+
+    if [[ -f "${scan_succesful_log_file}" ]]; then
+        printWarning "${1} is already scanned"
+        return 1
+    fi
+
+    if [[ $(dirname "${1}") ==  *_output ]]; then
+        printWarning "${1} is an output file"
+        return 1
+    fi
+
+    return 0
+}
+
 scanFolder()
 {
     printInfo "Scanning folder"
@@ -182,21 +221,17 @@ scanFolder()
     shopt -s globstar lastpipe
 
     for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.mp4; do
-        local scan_succesful_log_file="${VIDEO_FILE}.scan-succesful"
-        if [[ -f "${VIDEO_FILE}" ]] && [[ ! -f "${scan_succesful_log_file}" ]]; then
+        local scan_succesful_log_file=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
+        if shouldScanFile "${VIDEO_FILE}"; then
             printInfo "Scanning file: ${VIDEO_FILE}"
-            if dvr-scan -i "${VIDEO_FILE}" -t .5 -m ffmpeg; then
+            if scanFile "${VIDEO_FILE}"; then
                 printSuccess "Succesfully scanned ${VIDEO_FILE}"
                 touch "${scan_succesful_log_file}"
             else
                 printError "Error scanning video file ${VIDEO_FILE}"
             fi
-            printf "\\n\\n"
-        else
-            printWarning "${VIDEO_FILE} already scanned, skipping"
         fi
     done
-
 }
 
 main "$@"
