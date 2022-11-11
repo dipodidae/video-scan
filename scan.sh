@@ -183,19 +183,19 @@ scanFile()
 
 getSuccesfullLogFileLocation()
 {
-    local scan_succesful_log_file="${1}.scan-successful"
-    echo "${scan_succesful_log_file}"
+    local scanSuccesfullLogFile="${1}.scan-successful"
+    echo "${scanSuccesfullLogFile}"
 }
 
 shouldScanFile()
 {
-    local scan_succesful_log_file=$(getSuccesfullLogFileLocation "${1}")
+    local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${1}")
 
     if [[ ! -f "${1}" ]]; then
         return 1
     fi
 
-    if [[ -f "${scan_succesful_log_file}" ]]; then
+    if [[ -f "${scanSuccesfullLogFile}" ]]; then
         return 1
     fi
 
@@ -215,11 +215,11 @@ scanFolder()
     shopt -s globstar lastpipe
 
     for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.mp4; do
-        local scan_succesful_log_file=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
+        local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
         if shouldScanFile "${VIDEO_FILE}"; then
             printInfo "Scanning file: ${VIDEO_FILE}"
             if scanFile "${VIDEO_FILE}"; then
-                touch "${scan_succesful_log_file}"
+                touch "${scanSuccesfullLogFile}"
             else
                 printError "Error scanning video file ${VIDEO_FILE}"
             fi
