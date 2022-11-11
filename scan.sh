@@ -149,24 +149,7 @@ checkAndInstallAptPackages()
 
 checkAndInstallPipPackages()
 {
-    local requirementsMet=1
-    declare -A requirements=( \
-        [dvr-scan]="dvr-scan[opencv-headless]"\
-    )
-
-    for bin in "${!requirements[@]}"; do
-        local requirement=${requirements[$bin]}
-        if ! sudo pip3 show ${bin}; then
-            if ! sudo pip3 install --upgrade -q ${requirement}; then
-                requirementsMet=0
-            fi
-        fi
-    done
-
-    if [[ ! $requirementsMet == 1 ]]; then
-        printError "Required python packages are missing"
-        return 20
-    fi
+    sudo pip3 install --upgrade -q dvr-scan[opencv-headless]
 }
 
 scanFile()
