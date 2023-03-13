@@ -177,22 +177,18 @@ shouldScanFile() {
 scanFolder() {
     printInfo "Scanning folder"
 
-    local FILE_EXTENSIONS=(mp4 mpg avi)
-
     shopt -s globstar lastpipe
 
-    for FILE_EXTENSION in "${FILE_EXTENSIONS[@]}"; do
-        for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.${FILE_EXTENSION}; do
-            local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
-            if shouldScanFile "${VIDEO_FILE}"; then
-                printInfo "Scanning file: ${VIDEO_FILE}"
-                if scanFile "${VIDEO_FILE}"; then
-                    touch "${scanSuccesfullLogFile}"
-                else
-                    printError "Error scanning video file ${VIDEO_FILE}"
-                fi
+    for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.{mp4,avi,mpg}; do
+        local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
+        if shouldScanFile "${VIDEO_FILE}"; then
+            printInfo "Scanning file: ${VIDEO_FILE}"
+            if scanFile "${VIDEO_FILE}"; then
+                touch "${scanSuccesfullLogFile}"
+            else
+                printError "Error scanning video file ${VIDEO_FILE}"
             fi
-        done
+        fi
     done
 }
 
