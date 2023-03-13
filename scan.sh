@@ -21,8 +21,7 @@ MESSAGE_TEMPLATE="\\n${COLOR_TEXT_GREY}╔════════════�
 ║${COLOR_RESET}  $(tput bold)%b  %s\\n
 ${COLOR_TEXT_GREY}╚══════════════════════════════════════════╝${COLOR_RESET}\\n\\n"
 
-parseMessageIcon()
-{
+parseMessageIcon() {
     echo "${COLOR_BACKGROUND_WHITE}${COLOR_TEXT_BLACK}  ${1}  ${COLOR_RESET}"
 }
 
@@ -31,35 +30,29 @@ MESSAGE_ICON_INFO=$(parseMessageIcon "ℹ️")
 MESSAGE_ICON_TICK=$(parseMessageIcon "✅")
 MESSAGE_ICON_WARN=$(parseMessageIcon "⚠️")
 
-FOLDER_TO_SCAN=`pwd`
+FOLDER_TO_SCAN=$(pwd)
 
-printError()
-{
+printError() {
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_CROSS}" "${COLOR_TEXT_RED}${1}${COLOR_RESET}"
 }
 
-printSuccess()
-{
+printSuccess() {
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_TICK}" "${COLOR_TEXT_GREEN}${1}${COLOR_RESET}"
 }
 
-printWarning()
-{
+printWarning() {
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_WARN}" "${COLOR_TEXT_YELLOW}${1}${COLOR_RESET}"
 }
 
-printInfo()
-{
+printInfo() {
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_INFO}" "${COLOR_TEXT_WHITE}${1}${COLOR_RESET}"
 }
 
-printLine()
-{
+printLine() {
     echo "       ${1}"
 }
 
-main()
-{
+main() {
     if [ -f output.txt ]; then
         rm output.txt
     fi
@@ -79,8 +72,7 @@ main()
     fi
 }
 
-setFolder()
-{
+setFolder() {
     if [ ! -z "${1}" ]; then
         FOLDER_TO_SCAN="${1}"
         if [ ! -d "${FOLDER_TO_SCAN}" ]; then
@@ -90,9 +82,8 @@ setFolder()
     fi
 }
 
-showIntro()
-{
-        printf "${COLOR_TEXT_BLUE}            5~    5@.
+showIntro() {
+    printf "${COLOR_TEXT_BLUE}            5~    5@.
             &@:  G@Y
        .@^^.?@@B&@@5
       :G@&J  P@@@@@~
@@ -114,13 +105,11 @@ showIntro()
 ${COLOR_BACKGROUND_BLUE}${COLOR_TEXT_BLACK}        VIDEO FILE SCANNER        ${COLOR_RESET}\\n\\n\\n"
 }
 
-checkAndInstallAptPackages()
-{
-    declare -A requirements=( \
-        [python3]=python3\
-        [pip3]=python3-pip \
-        [tput]=tput \
-        [ffmpeg]=ffmpeg \
+checkAndInstallAptPackages() {
+    declare -A requirements=(
+        [python3]=python3 [pip3]=python3-pip
+        [tput]=tput
+        [ffmpeg]=ffmpeg
     )
 
     local requirementsAreMet=1
@@ -147,13 +136,11 @@ checkAndInstallAptPackages()
     fi
 }
 
-checkAndInstallPipPackages()
-{
+checkAndInstallPipPackages() {
     sudo pip3 install --upgrade -q dvr-scan[opencv-headless]
 }
 
-scanFile()
-{
+scanFile() {
     local directory="$(dirname "${1}")"
 
     dvr-scan \
@@ -164,14 +151,12 @@ scanFile()
         -q
 }
 
-getSuccesfullLogFileLocation()
-{
+getSuccesfullLogFileLocation() {
     local scanSuccesfullLogFile="${1}.scan-successful"
     echo "${scanSuccesfullLogFile}"
 }
 
-shouldScanFile()
-{
+shouldScanFile() {
     local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${1}")
 
     if [[ ! -f "${1}" ]]; then
@@ -182,31 +167,32 @@ shouldScanFile()
         return 1
     fi
 
-    if [[ $(dirname "${1}") ==  *_output ]]; then
+    if [[ $(dirname "${1}") == *_output ]]; then
         return 1
     fi
 
     return 0
 }
 
-scanFolder()
-{
+scanFolder() {
     printInfo "Scanning folder"
 
     local FILE_EXTENSIONS=(mp4 mpg avi)
 
     shopt -s globstar lastpipe
 
-    for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.mp4; do
-        local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
-        if shouldScanFile "${VIDEO_FILE}"; then
-            printInfo "Scanning file: ${VIDEO_FILE}"
-            if scanFile "${VIDEO_FILE}"; then
-                touch "${scanSuccesfullLogFile}"
-            else
-                printError "Error scanning video file ${VIDEO_FILE}"
+    for FILE_EXTENSION in "${FILE_EXTENSIONS[@]}"; do
+        for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.${FILE_EXTENSION}; do
+            local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
+            if shouldScanFile "${VIDEO_FILE}"; then
+                printInfo "Scanning file: ${VIDEO_FILE}"
+                if scanFile "${VIDEO_FILE}"; then
+                    touch "${scanSuccesfullLogFile}"
+                else
+                    printError "Error scanning video file ${VIDEO_FILE}"
+                fi
             fi
-        fi
+        done
     done
 }
 
