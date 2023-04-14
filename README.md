@@ -13,7 +13,7 @@ curl -O https://raw.githubusercontent.com/dipodidae/video-scan/main/scan.sh && c
 
 # Deface
 
-##install
+## Install
 
 ```sh
 curl -O https://raw.githubusercontent.com/dipodidae/video-scan/main/deface.sh && chmod +x deface.sh
