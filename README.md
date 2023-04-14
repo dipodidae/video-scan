@@ -20,7 +20,9 @@ Or
 
 ## Deface
 
-- Works best when you run it on a foler that's on your hard drive
+- Works best when you run it on a folder that's on your hard drive, not a thumb drive or an sd card
+  - This is because it will create a folder called `_output` and put the defaced videos in there
+  - This might exceed the capacity of your thumb drive or sd card
 - It will create a folder called `_output` and put the defaced videos in there
 - You don't have to put the script in the folder you want to deface, you can put it anywhere and just point it to the folder you want to deface
 - Run it by typing `./deface.sh folder/to/videofiles`
