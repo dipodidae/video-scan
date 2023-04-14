@@ -10,3 +10,9 @@ curl -O https://raw.githubusercontent.com/dipodidae/video-scan/main/scan.sh && c
 ```sh
 ./scan.sh folder/to/videofiles
 ```
+
+Or
+
+```sh
+./deface.sh folder/to/videofiles
+```
