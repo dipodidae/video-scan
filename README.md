@@ -11,14 +11,11 @@ curl -O https://raw.githubusercontent.com/dipodidae/video-scan/main/scan.sh && c
 ./scan.sh folder/to/videofiles
 ```
 
-Or
+# Deface
 
 ```sh
 ./deface.sh folder/to/videofiles
 ```
-
-
-## Deface
 
 - Works best when you run it on a folder that's on your hard drive, not a thumb drive or an sd card
   - This is because it will create a folder called `_output` and put the defaced videos in there
