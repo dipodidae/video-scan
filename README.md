@@ -19,6 +19,8 @@ curl -O https://raw.githubusercontent.com/dipodidae/video-scan/main/scan.sh && c
 curl -O https://raw.githubusercontent.com/dipodidae/video-scan/main/deface.sh && chmod +x deface.sh
 ```
 
+## How to use
+
 ```sh
 ./deface.sh folder/to/videofiles
 ```
