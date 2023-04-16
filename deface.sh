@@ -157,7 +157,7 @@ defaceFile() {
     deface "$1" \
         --thresh 0.02 \
         --output "${directory}/_output/${filename}" \
-        --scale 960x540
+        --scale 569x320
     # --ffmpeg-config '{"vf": "[0:v]crop=554:106:62:926,avgblur=15[fg];[0:v][fg]overlay=62:926,scale=iw/2:-1", "map": "[v]"}'
 }
 
