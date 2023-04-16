@@ -22,14 +22,16 @@ for file in "$folder_path"/*.{avi,mov,mpeg,mkv,wmv,m4a,m4v}; do
 
   # Convert the file
   if [[ -f $file ]] && [[ ! -f "$output_file" ]]; then
-    ffmpeg -i "$file" \
+    ffmpeg -i "${file}" \
+      -filter_complex "[0:v]crop=554:106:62:926,avgblur=15[fg];[0:v][fg]overlay=62:926[v]" \
+      -map "[v]" \
       -c:v libx264 \
       -crf 23 \
       -preset medium \
-      -c:a aac \
-      -b:a 128k \
-      -movflags +faststart \
-      "$output_file"
+      -profile:v baseline \
+      -level 3.0 \
+      -an \
+      "${output_file}"
   fi
 done
 

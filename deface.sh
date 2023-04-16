@@ -157,8 +157,8 @@ defaceFile() {
     deface "$1" \
         --thresh 0.02 \
         --output "${directory}/_output/${filename}" \
-        --scale 960x540 \
-        --ffmpeg-config '{"codec": "libx264", "crf": 23, "preset": "slow", "tune": "film", "filter:v": "boxblur=77:950:554:106:100:50,scale=iw/2:-1"}'
+        --scale 960x540
+    # --ffmpeg-config '{"vf": "[0:v]crop=554:106:62:926,avgblur=15[fg];[0:v][fg]overlay=62:926,scale=iw/2:-1", "map": "[v]"}'
 }
 
 getSuccesfullLogFileLocation() {
