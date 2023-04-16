@@ -138,14 +138,27 @@ checkAndInstallAptPackages() {
 }
 
 checkAndInstallPipPackages() {
-    sudo pip3 install --upgrade -q 'git+https://github.com/ORB-HD/deface'
+    pip3 install --upgrade -q 'git+https://github.com/ORB-HD/deface'
+    pip3 install --upgrade -q imageio
 }
 
 defaceFile() {
     local directory="$(dirname "${1}")"
     local filename="$(basename "${1}")"
+    local outputFolder="${directory}/_output"
 
-    deface "$1" --thresh 0.02 --output "${directory}/_output/${filename}"
+    printInfo "Defacing file: ${filename}"
+
+    if [[ ! -d $outputFolder ]]; then
+        parseInfo "Creating output folder '${outputFolder}'"
+        mkdir $outputFolder
+    fi
+
+    deface "$1" \
+        --thresh 0.02 \
+        --output "${directory}/_output/${filename}" \
+        --scale 960x540 \
+        --ffmpeg-config '{"codec": "libx264", "crf": 23, "preset": "slow", "tune": "film", "filter:v": "boxblur=77:950:554:106:100:50,scale=iw/2:-1"}'
 }
 
 getSuccesfullLogFileLocation() {
@@ -154,9 +167,10 @@ getSuccesfullLogFileLocation() {
 }
 
 shouldDefaceFile() {
-    local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${1}")
+    local inputFile="$1"
+    local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${inputFile}")
 
-    if [[ ! -f "${1}" ]]; then
+    if [[ ! -f "${inputFile}" ]]; then
         return 1
     fi
 
@@ -164,7 +178,11 @@ shouldDefaceFile() {
         return 1
     fi
 
-    if [[ $(dirname "${1}") == *_output ]]; then
+    if [[ $(dirname "${inputFile}") == *_output ]]; then
+        return 1
+    fi
+
+    if [[ -f "${inputFile%.*}_defaced.${inputFile##*.}" ]]; then
         return 1
     fi
 
@@ -172,18 +190,15 @@ shouldDefaceFile() {
 }
 
 defaceFolder() {
-    printInfo "Scanning folder"
+    printInfo "Defacing folder"
 
     shopt -s globstar lastpipe
 
     for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.{mp4,avi,mpg}; do
-        local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
+        local defaceSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
         if shouldDefaceFile "${VIDEO_FILE}"; then
-            printInfo "Defacing file: ${VIDEO_FILE}"
-            if defaceFile "${VIDEO_FILE}"; then
-                touch "${scanSuccesfullLogFile}"
-            else
-                printError "Error scanning video file ${VIDEO_FILE}"
+            if ! defaceFile "${VIDEO_FILE}"; then
+                printError "Error defacing video file ${VIDEO_FILE}"
             fi
         fi
     done
