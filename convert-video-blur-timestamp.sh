@@ -14,7 +14,6 @@ fi
 
 for file in "$folder_path"/*.{avi,mov,mpeg,mkv,wmv,m4a,m4v}; do
   filename=$(basename -- "$file")
-  extension="${filename##*.}"
   filename="${filename%.*}"
 
   # Output file

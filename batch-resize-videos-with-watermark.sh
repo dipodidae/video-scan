@@ -14,13 +14,12 @@ fi
 
 output_folder="$folder_path/_output"
 if [[ ! -d $output_folder ]]; then
-  mkdir $output_folder
+  mkdir "$output_folder"
 fi
 
 for file in "$folder_path"/*.{avi,mov,mpeg,mkv,wmv,m4a,m4v,mp4}; do
   if [[ -f $file ]]; then
     filename=$(basename -- "$file")
-    extension="${filename##*.}"
     filename="${filename%.*}"
 
     # Output file

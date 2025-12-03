@@ -12,11 +12,9 @@ COLOR_TEXT_YELLOW=$(tput setaf 3)
 COLOR_TEXT_GREY=$(tput setaf 8)
 
 COLOR_BACKGROUND_BLUE=$(tput setab 4)
-COLOR_BACKGROUND_GREEN=$(tput setab 2)
-COLOR_BACKGROUND_RED=$(tput setab 1)
 COLOR_BACKGROUND_WHITE=$(tput setab 7)
-COLOR_BACKGROUND_YELLOW=$(tput setab 3)
 
+# shellcheck disable=SC2059
 MESSAGE_TEMPLATE="\\n${COLOR_TEXT_GREY}╔══════════════════════════════════════════╗\\n
 ║${COLOR_RESET}  $(tput bold)%b  %s\\n
 ${COLOR_TEXT_GREY}╚══════════════════════════════════════════╝${COLOR_RESET}\\n\\n"
@@ -33,18 +31,22 @@ MESSAGE_ICON_WARN=$(parseMessageIcon "⚠️")
 FOLDER_TO_SCAN=$(pwd)
 
 printError() {
+    # shellcheck disable=SC2059
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_CROSS}" "${COLOR_TEXT_RED}${1}${COLOR_RESET}"
 }
 
 printSuccess() {
+    # shellcheck disable=SC2059
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_TICK}" "${COLOR_TEXT_GREEN}${1}${COLOR_RESET}"
 }
 
 printWarning() {
+    # shellcheck disable=SC2059
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_WARN}" "${COLOR_TEXT_YELLOW}${1}${COLOR_RESET}"
 }
 
 printInfo() {
+    # shellcheck disable=SC2059
     printf "${MESSAGE_TEMPLATE}" "${MESSAGE_ICON_INFO}" "${COLOR_TEXT_WHITE}${1}${COLOR_RESET}"
 }
 
@@ -57,15 +59,13 @@ main() {
         rm output.txt
     fi
 
-    (
+    if (
         showIntro
         setFolder "${1}"
         checkAndInstallAptPackages
         checkAndInstallPipPackages
         scanFolder
-    )
-
-    if [ $? -eq 0 ]; then
+    ); then
         printSuccess "Done!"
     else
         printError "Something went wrong..."
@@ -73,7 +73,7 @@ main() {
 }
 
 setFolder() {
-    if [ ! -z "${1}" ]; then
+    if [ -n "${1}" ]; then
         FOLDER_TO_SCAN="${1}"
         if [ ! -d "${FOLDER_TO_SCAN}" ]; then
             printError "Folder (${FOLDER_TO_SCAN}) does not exist"
@@ -83,6 +83,7 @@ setFolder() {
 }
 
 showIntro() {
+    # shellcheck disable=SC2059
     printf "${COLOR_TEXT_BLUE}            5~    5@.
             &@:  G@Y
        .@^^.?@@B&@@5
@@ -117,13 +118,13 @@ checkAndInstallAptPackages() {
 
     for bin in "${!requirements[@]}"; do
         local requirement=${requirements[$bin]}
-        if [[ ! $(which ${bin}) ]]; then
+        if [[ ! $(which "${bin}") ]]; then
             printInfo "Installing ${requirement}"
             if [[ ! $aptIsUpdated == 1 ]]; then
                 sudo apt-get -qq update
             fi
 
-            if ! sudo apt-get -qq install ${requirement} -y; then
+            if ! sudo apt-get -qq install "${requirement}" -y; then
                 requirementsAreMet=0
                 printWarning "${requirement} not installed"
             fi
@@ -137,11 +138,12 @@ checkAndInstallAptPackages() {
 }
 
 checkAndInstallPipPackages() {
-    sudo pip3 install --upgrade -q dvr-scan[opencv-headless]
+    sudo pip3 install --upgrade -q 'dvr-scan[opencv-headless]'
 }
 
 scanFile() {
-    local directory="$(dirname "${1}")"
+    local directory
+    directory="$(dirname "${1}")"
 
     dvr-scan \
         -i "$1" \
@@ -152,12 +154,14 @@ scanFile() {
 }
 
 getSuccesfullLogFileLocation() {
-    local scanSuccesfullLogFile="${1}.scan-successful"
+    local scanSuccesfullLogFile
+    scanSuccesfullLogFile="${1}.scan-successful"
     echo "${scanSuccesfullLogFile}"
 }
 
 shouldScanFile() {
-    local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${1}")
+    local scanSuccesfullLogFile
+    scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${1}")
 
     if [[ ! -f "${1}" ]]; then
         return 1
@@ -179,8 +183,9 @@ scanFolder() {
 
     shopt -s globstar lastpipe
 
-    for VIDEO_FILE in ${FOLDER_TO_SCAN}/**/*.{mp4,avi,mpg}; do
-        local scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
+    for VIDEO_FILE in "${FOLDER_TO_SCAN}"/**/*.{mp4,avi,mpg}; do
+        local scanSuccesfullLogFile
+        scanSuccesfullLogFile=$(getSuccesfullLogFileLocation "${VIDEO_FILE}")
         if shouldScanFile "${VIDEO_FILE}"; then
             printInfo "Scanning file: ${VIDEO_FILE}"
             if scanFile "${VIDEO_FILE}"; then
