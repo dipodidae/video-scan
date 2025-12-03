@@ -46,7 +46,9 @@ param(
 
 [switch]$UseNVENC,
 
-[switch]$BlurTimestamp
+[switch]$BlurTimestamp,
+
+[switch]$NoWatermark
 )
 
 # Strict mode
@@ -61,6 +63,7 @@ $script:CRF_VALUE = $CRF
 $script:PRESET = $Preset
 $script:USE_NVENC = $UseNVENC
 $script:THREADS_PER_JOB = $ThreadsPerJob
+$script:NO_WATERMARK = $NoWatermark
 $script:RESUME_LOG = ".shrink_resume.log"
 
 # Tracking variables
@@ -124,6 +127,9 @@ function Test-Dependencies {
 }
 
 function Test-Watermark {
+  if ($script:NO_WATERMARK) {
+    return
+  }
   if (-not (Test-Path $script:WATERMARK_FILE)) {
     Write-ColorOutput "Error: Watermark file '$script:WATERMARK_FILE' not found" -Color Red
     Write-ColorOutput "Please ensure the watermark file exists in the current directory." -Color Red
@@ -315,16 +321,23 @@ function Get-CropCoordinates {
 function Get-FilterChain {
   param(
   [hashtable]$CropCoords,
-  [bool]$EnableBlur
+  [bool]$EnableBlur,
+  [bool]$NoWatermark
   )
 
   # Black and white filter - remove all saturation
   $colorFilter = "hue=s=0"
 
   if ($EnableBlur) {
-    return "[0:v]crop=$($CropCoords.Width):$($CropCoords.Height):$($CropCoords.X):$($CropCoords.Y),avgblur=8[fg];[0:v][fg]overlay=$($CropCoords.X):$($CropCoords.Y)[blurred];[blurred]scale=${script:OUTPUT_WIDTH}:${script:OUTPUT_HEIGHT}:flags=fast_bilinear,${colorFilter}[v];[v][1:v]overlay=0:0"
+    $baseFilter = "[0:v]crop=$($CropCoords.Width):$($CropCoords.Height):$($CropCoords.X):$($CropCoords.Y),avgblur=8[fg];[0:v][fg]overlay=$($CropCoords.X):$($CropCoords.Y)[blurred];[blurred]scale=${script:OUTPUT_WIDTH}:${script:OUTPUT_HEIGHT}:flags=fast_bilinear,${colorFilter}"
   } else {
-    return "[0:v]scale=${script:OUTPUT_WIDTH}:${script:OUTPUT_HEIGHT}:flags=fast_bilinear,${colorFilter}[v];[v][1:v]overlay=0:0"
+    $baseFilter = "[0:v]scale=${script:OUTPUT_WIDTH}:${script:OUTPUT_HEIGHT}:flags=fast_bilinear,${colorFilter}"
+  }
+
+  if ($NoWatermark) {
+    return $baseFilter
+  } else {
+    return "${baseFilter}[v];[v][1:v]overlay=0:0"
   }
 }
 
@@ -355,7 +368,7 @@ function Invoke-VideoEncode {
     $cropCoords = Get-CropCoordinates -Height $height
 
     # Build filter chain
-    $filterComplex = Get-FilterChain -CropCoords $cropCoords -EnableBlur $EnableBlur
+    $filterComplex = Get-FilterChain -CropCoords $cropCoords -EnableBlur $EnableBlur -NoWatermark $script:NO_WATERMARK
 
     # Use NVENC GPU encoding if requested, otherwise CPU
     if ($script:USE_NVENC) {
@@ -388,7 +401,10 @@ function Invoke-VideoEncode {
     if ($hwaccel.Count -gt 0) { $ffmpegArgs.AddRange($hwaccel) }
     $ffmpegArgs.AddRange(@("-progress", "`"$progressLog`"", "-loglevel", "error"))
     if (-not $script:USE_NVENC) { $ffmpegArgs.AddRange(@("-threads", $script:THREADS_PER_JOB)) }
-    $ffmpegArgs.AddRange(@("-i", "`"$InputFile`"", "-i", "`"$($script:WATERMARK_FILE)`""))
+    $ffmpegArgs.AddRange(@("-i", "`"$InputFile`""))
+    if (-not $script:NO_WATERMARK) {
+      $ffmpegArgs.AddRange(@("-i", "`"$($script:WATERMARK_FILE)`""))
+    }
     $ffmpegArgs.AddRange(@("-filter_complex", "`"$filterComplex`"", "-c:v", $encoder, "-preset", $preset))
     if ($rateControl.Count -gt 0) { $ffmpegArgs.AddRange($rateControl) }
     $ffmpegArgs.AddRange(@($qualityParam, $qualityValue, "-movflags", "+faststart", "-an", "`"$OutputFile`""))
@@ -544,10 +560,10 @@ function Invoke-ProcessAllVideos {
 
   $videoFiles = Get-ChildItem -Path $FolderPath -Recurse -File -Include @(
   '*.avi', '*.mov', '*.mpeg', '*.mkv', '*.wmv', '*.m4a', '*.m4v', '*.mp4'
-  ) | Where-Object { $_.FullName -like '*\stens staphorst\*' }
+  )
 
   $script:TotalFiles = $videoFiles.Count
-  Write-ColorOutput "Found $script:TotalFiles video files (only 'stens staphorst' folder)" -Color Green
+  Write-ColorOutput "Found $script:TotalFiles video files" -Color Green
 
   if ($script:TotalFiles -eq 0) {
     Write-ColorOutput "No video files to process" -Color Yellow
@@ -573,6 +589,7 @@ function Invoke-ProcessAllVideos {
     $PRESET = $using:PRESET
     $USE_NVENC = $using:USE_NVENC
     $THREADS_PER_JOB = $using:THREADS_PER_JOB
+    $NO_WATERMARK = $using:NO_WATERMARK
     $RESUME_LOG = $using:RESUME_LOG
     $TotalFiles = $using:TotalFiles
     $StartTime = $using:StartTime
@@ -673,13 +690,18 @@ function Invoke-ProcessAllVideos {
     }
 
     function Get-FilterChain {
-      param([hashtable]$CropCoords, [bool]$EnableBlur)
+      param([hashtable]$CropCoords, [bool]$EnableBlur, [bool]$NoWatermark)
       # Black and white filter - remove all saturation
       $colorFilter = "hue=s=0"
       if ($EnableBlur) {
-        return "[0:v]crop=$($CropCoords.Width):$($CropCoords.Height):$($CropCoords.X):$($CropCoords.Y),avgblur=8[fg];[0:v][fg]overlay=$($CropCoords.X):$($CropCoords.Y)[blurred];[blurred]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:flags=fast_bilinear,${colorFilter}[v];[v][1:v]overlay=0:0"
+        $baseFilter = "[0:v]crop=$($CropCoords.Width):$($CropCoords.Height):$($CropCoords.X):$($CropCoords.Y),avgblur=8[fg];[0:v][fg]overlay=$($CropCoords.X):$($CropCoords.Y)[blurred];[blurred]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:flags=fast_bilinear,${colorFilter}"
       } else {
-        return "[0:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:flags=fast_bilinear,${colorFilter}[v];[v][1:v]overlay=0:0"
+        $baseFilter = "[0:v]scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:flags=fast_bilinear,${colorFilter}"
+      }
+      if ($NoWatermark) {
+        return $baseFilter
+      } else {
+        return "${baseFilter}[v];[v][1:v]overlay=0:0"
       }
     }
 
@@ -700,7 +722,7 @@ function Invoke-ProcessAllVideos {
 
         $height = [int]$heightStr
         $cropCoords = Get-CropCoordinates -Height $height
-        $filterComplex = Get-FilterChain -CropCoords $cropCoords -EnableBlur $EnableBlur
+        $filterComplex = Get-FilterChain -CropCoords $cropCoords -EnableBlur $EnableBlur -NoWatermark $NO_WATERMARK
 
         # Use NVENC GPU encoding if requested, otherwise CPU
         if ($USE_NVENC) {
@@ -732,7 +754,10 @@ function Invoke-ProcessAllVideos {
         if ($hwaccel.Count -gt 0) { $ffmpegArgs.AddRange($hwaccel) }
         $ffmpegArgs.AddRange(@("-progress", "`"$progressLog`"", "-loglevel", "error"))
         if (-not $USE_NVENC) { $ffmpegArgs.AddRange(@("-threads", $THREADS_PER_JOB)) }
-        $ffmpegArgs.AddRange(@("-i", "`"$InputFile`"", "-i", "`"$WATERMARK_FILE`""))
+        $ffmpegArgs.AddRange(@("-i", "`"$InputFile`""))
+        if (-not $NO_WATERMARK) {
+          $ffmpegArgs.AddRange(@("-i", "`"$WATERMARK_FILE`""))
+        }
         $ffmpegArgs.AddRange(@("-filter_complex", "`"$filterComplex`"", "-c:v", $encoder, "-preset", $preset))
         if ($rateControl.Count -gt 0) { $ffmpegArgs.AddRange($rateControl) }
         $ffmpegArgs.AddRange(@($qualityParam, $qualityValue, "-movflags", "+faststart", "-an", "`"$OutputFile`""))
