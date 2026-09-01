@@ -12,6 +12,8 @@ Starter script for producing "viewable but unusable" previews:
 
 FFmpeg is fetched automatically the first time you run this: it is downloaded from
 gyan.dev, checksum-verified and unpacked into a "bin" folder next to this script.
+If gyan.dev is unreachable it falls back to the BtbN build on GitHub, which
+publishes no checksum - that download is not verified and the script says so.
 Nothing is installed system-wide and no administrator rights are needed. Use
 -NoAutoFetch to turn that off.
 
@@ -181,7 +183,8 @@ function Save-RemoteFile {
     [string]$Label
   )
 
-  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+  # -bor, not =: assigning would switch TLS 1.3 off for the rest of the session.
+  [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
   try { Add-Type -AssemblyName System.Net.Http -ErrorAction SilentlyContinue } catch { }
 
   $client = [System.Net.Http.HttpClient]::new()
@@ -227,6 +230,13 @@ function Save-RemoteFile {
     $target.Flush()
     $watch.Stop()
     Write-Progress -Activity $Label -Completed
+
+    # Read() also returns 0 when the connection drops half-way, so an
+    # interrupted transfer would otherwise be reported as a finished download.
+    if ($total -gt 0 -and $read -ne $total) {
+      throw "download was cut short after $(Format-FileSize $read) of $(Format-FileSize $total)"
+    }
+
     return [pscustomobject]@{ Bytes = $read; Elapsed = $watch.Elapsed }
   } finally {
     if ($target) { $target.Dispose() }
@@ -238,7 +248,7 @@ function Save-RemoteFile {
 
 function Get-RemoteText {
   param([string]$Uri)
-  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+  [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
   return (Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec 60).Content
 }
 
@@ -412,7 +422,9 @@ function Get-FilterComplex {
   $opacity = $WatermarkOpacity.ToString([System.Globalization.CultureInfo]::InvariantCulture)
 
   $chain = @(
-    "[0:v]${fitFilter},fps=${Fps},format=yuv420p[base]"
+    # setsar=1: scale keeps the source SAR, so anamorphic sources (DV, MTS)
+    # would otherwise be displayed stretched instead of at ${Width}x${Height}.
+    "[0:v]${fitFilter},setsar=1,fps=${Fps},format=yuv420p[base]"
     "[1:v]format=rgba,scale=${logoWidth}:-2,colorchannelmixer=aa=${opacity},split=2[wm1][wm2]"
     # upper third and lower third, horizontally centred
     "[base][wm1]overlay=(W-w)/2:(H*0.28)-(h/2)[stamped1]"
@@ -625,6 +637,19 @@ if (-not (Test-Path -LiteralPath $OutputFolder)) {
   New-Item -ItemType Directory -Path $OutputFolder -Force | Out-Null
 }
 $OutputFolder = (Resolve-Path -LiteralPath $OutputFolder).Path
+
+# Everything under the output folder is skipped by the scan, so an output
+# folder that is the input folder (or one of its parents) would filter away
+# every source file and report a bare "No videos found".
+$inputResolved = (Resolve-Path -LiteralPath $FolderPath).Path.TrimEnd('\', '/')
+$outputResolved = $OutputFolder.TrimEnd('\', '/')
+$sep = [System.IO.Path]::DirectorySeparatorChar
+if ($inputResolved.Equals($outputResolved, [StringComparison]::OrdinalIgnoreCase) -or
+    $inputResolved.StartsWith($outputResolved + $sep, [StringComparison]::OrdinalIgnoreCase)) {
+  Write-ColorOutput "Error: -OutputFolder ($outputResolved) is the input folder or one of its parents." -Color Red
+  Write-ColorOutput 'Pick an output folder outside the input tree, or a subfolder of it.' -Color Yellow
+  exit 1
+}
 
 Write-RunHeader
 Invoke-ProcessAllVideos -Watermark $watermarkPath

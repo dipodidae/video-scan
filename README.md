@@ -6,7 +6,7 @@ Collection of video processing scripts for batch conversion, watermarking, resiz
 
 PowerShell starter for small "viewable but unusable" previews: 854x480 (480p, 16:9), 15 fps, colour kept, with the Ongehoord logo stamped twice at 35% opacity. Audio is dropped. Prints an input-vs-output size summary so you can check whether the files come out small enough.
 
-FFmpeg is downloaded automatically on first run (checksum-verified, unpacked into `bin\` next to the script, no admin rights, nothing installed system-wide), so this script works on a clean Windows machine with no setup.
+FFmpeg is downloaded automatically on first run (checksum-verified, unpacked into `bin\` next to the script, no admin rights, nothing installed system-wide), so this script works on a clean Windows machine with no setup. If the primary source (gyan.dev) is unreachable it falls back to the BtbN build on GitHub, which publishes no checksum; that download cannot be verified and the script warns when it uses it.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File batch-process-videos-lowres-logo-color.ps1 -FolderPath "$env:USERPROFILE\Documents\input" -OutputFolder "$env:USERPROFILE\Documents\output"
@@ -115,7 +115,7 @@ Blurs or obscures detected faces in videos based on scan data. Requires prior fa
    - `-FolderPath` is the folder holding your original videos. Point it wherever they actually are: `$env:USERPROFILE\Documents\input` if you copied them there first, or something like `F:\` for a memory card or external drive.
    - `-OutputFolder` is where the small previews are written. It is created for you if it does not exist yet, and it must not be the same folder as the input.
 
-   On the first run it reports `FFmpeg not found - fetching it now (one-off, ~80 MB)`, downloads a static build, verifies its SHA-256 checksum and unpacks `ffmpeg.exe` into `bin\`. Later runs reuse it. If FFmpeg is already on your PATH that is used instead and nothing is downloaded.
+   On the first run it reports `FFmpeg not found - fetching it now (one-off, ~80 MB)`, downloads a static build, verifies its SHA-256 checksum and unpacks `ffmpeg.exe` into `bin\` (the GitHub fallback source has no published checksum and is flagged as unverified). Later runs reuse it. If FFmpeg is already on your PATH that is used instead and nothing is downloaded.
 
 4. **Watch the output** - the script prints its settings, then a line per file:
    ```
