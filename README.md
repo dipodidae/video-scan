@@ -83,29 +83,47 @@ Blurs or obscures detected faces in videos based on scan data. Requires prior fa
 
 `batch-process-videos-lowres-logo-color.ps1` fetches its own dependencies, so on a clean machine this is the whole setup:
 
-1. **Get the scripts** - download this repository as a ZIP and unzip it, or:
-   ```powershell
-   git clone <repo-url>
-   cd video-scan
-   ```
-   Make sure `watermark.png` (the Ongehoord logo, PNG with transparency) sits in that same folder.
+1. **Download the scripts** - open https://github.com/dipodidae/video-scan in your browser, click the green **Code** button, then **Download ZIP**. The file lands in your `Downloads` folder as `video-scan-main.zip`.
 
-2. **Run it** - open PowerShell in that folder:
+   Unzip it: right-click the ZIP in File Explorer, choose **Extract All...**, then **Extract**. You now have a folder like `C:\Users\tom\Downloads\video-scan-main\video-scan-main` containing the scripts and `watermark.png` (the Ongehoord logo). Everything must stay together in that one folder.
+
+   > Running the scripts straight from inside the ZIP does not work - Windows needs them extracted first.
+
+2. **Open PowerShell in that folder** - in File Explorer, open the extracted folder so you see `batch-process-videos-lowres-logo-color.ps1` in it, then:
+
+   - **Windows 11**: right-click on an empty spot in the folder and choose **Open in Terminal**.
+   - **Windows 10**: hold **Shift**, right-click on an empty spot, and choose **Open PowerShell window here**.
+
+   No such menu item? Press the **Windows key**, type `powershell`, press **Enter**, and then move to the folder by typing `cd ` (with a space) followed by the folder path, for example:
+   ```powershell
+   cd "C:\Users\tom\Downloads\video-scan-main\video-scan-main"
+   ```
+   You can get that path by clicking the address bar in File Explorer and copying it. Paste into PowerShell with a right-click.
+
+   Check you are in the right place - this should list the script:
+   ```powershell
+   dir *.ps1
+   ```
+
+3. **Run it** - paste this in, adjusting the two folders, and press **Enter**:
    ```powershell
    powershell -ExecutionPolicy Bypass -File batch-process-videos-lowres-logo-color.ps1 -FolderPath "F:\" -OutputFolder "C:\Users\tom\Documents\video-export"
    ```
+   `-FolderPath` is the folder with your original videos (`F:\` is a memory card or external drive; a normal folder works too). `-OutputFolder` is where the small previews are written - it is created if it does not exist.
+
    On the first run it reports `FFmpeg not found - fetching it now (one-off, ~80 MB)`, downloads a static build, verifies its SHA-256 checksum and unpacks `ffmpeg.exe` into `bin\`. Later runs reuse it. If FFmpeg is already on your PATH that is used instead and nothing is downloaded.
 
-3. **Watch the output** - the script prints its settings, then a line per file:
+4. **Watch the output** - the script prints its settings, then a line per file:
    ```
    [3/57] DCIM\clip.mp4 ... 1.2 GB -> 18.4 MB (1.5%) in 42s | ETA 18m
    ```
    `-FolderPath` is searched recursively; the folder structure is mirrored in the output folder and everything is written as `.mp4`. Files that already exist are skipped, so you can stop with Ctrl+C and start again later.
 
-4. **Check the sizes** - the summary at the end shows total input vs output size and the average per file. Too big? Run again on a test folder with `-CRF 34`, or a smaller `-Width`/`-Height`.
+5. **Check the sizes** - the summary at the end shows total input vs output size and the average per file. Too big? Run again on a test folder with `-CRF 34`, or a smaller `-Width`/`-Height`.
 
 Notes:
 
+- Prefer git? `git clone https://github.com/dipodidae/video-scan.git` then `cd video-scan` replaces steps 1 and 2.
 - Windows PowerShell 5.1 (which ships with Windows) is enough for this script. The other `.ps1` scripts in this repo want PowerShell 7: `winget install Microsoft.PowerShell`, then use `pwsh` instead of `powershell`.
 - To install FFmpeg yourself instead, run `winget install Gyan.FFmpeg`, or download a build from https://www.gyan.dev/ffmpeg/builds/ and copy `ffmpeg.exe` and `ffprobe.exe` into a `bin` folder next to the scripts. Pass `-NoAutoFetch` to make the script refuse to download anything.
 - If PowerShell blocks the script, it was flagged as downloaded from the internet: `Unblock-File .\batch-process-videos-lowres-logo-color.ps1`.
