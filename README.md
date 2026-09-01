@@ -26,6 +26,30 @@ Optional parameters:
 - `-NoAutoFetch` - never download FFmpeg; fail with install instructions instead
 - `-Verbose` - print the full ffmpeg command line for every file
 
+## low-res-logo-preview.exe / launch-lowres-logo-color-gui.ps1
+
+The same conversion as above, without the command line. A small window opens with two folder pickers - one for the input folder, one for the output folder - and after **Start** the console shows the usual per-file progress.
+
+Two ways to get it:
+
+- **Download the executable** - take `low-res-logo-preview.exe` from the [latest release](https://github.com/dipodidae/video-scan/releases/latest) and double-click it. It carries the processing script and the logo inside it, so it needs no other file next to it; on first run it unpacks them into `%LOCALAPPDATA%\video-scan` and fetches FFmpeg there. Windows warns that the app is unrecognised because the executable is not code-signed - click **More info**, then **Run anyway**.
+- **Run the launcher script** - `launch-lowres-logo-color-gui.ps1`, kept in the same folder as `batch-process-videos-lowres-logo-color.ps1`:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File launch-lowres-logo-color-gui.ps1
+  ```
+
+The output picker can create a folder (**Make New Folder**); the input picker deliberately cannot, so it can only point at footage that already exists. Leave the output box empty to write to `<input folder>\_output`. Everything else uses the defaults - for `-CRF`, `-Fit`, `-UseNVENC` and the rest, call the script directly.
+
+### Building the executable
+
+Windows only, and it needs the [PS2EXE](https://github.com/MScholtes/PS2EXE) module, which is installed from the PowerShell Gallery on first run:
+
+```powershell
+.\build\build-exe.ps1 -Version 1.0.0
+```
+
+The executable lands in `dist\` with a `.sha256` file next to it. `.github/workflows/build-exe.yml` does the same on GitHub: every push builds it as a workflow artifact, and pushing a `v*` tag attaches it to a release of that name.
+
 ## batch-process-videos-nvenc-watermark-bw.ps1
 
 PowerShell script for batch video processing with NVENC GPU acceleration. Converts videos to 640x360, applies optional watermark overlay, converts to black & white, and optionally blurs timestamps.
@@ -82,6 +106,8 @@ Blurs or obscures detected faces in videos based on scan data. Requires prior fa
 ## Running on Windows
 
 `batch-process-videos-lowres-logo-color.ps1` fetches its own dependencies, so on a clean machine this is the whole setup:
+
+> Rather click than type? `low-res-logo-preview.exe` from the [latest release](https://github.com/dipodidae/video-scan/releases/latest) does the same thing with two folder pickers and needs none of the steps below.
 
 1. **Download the scripts** - open https://github.com/dipodidae/video-scan in your browser, click the green **Code** button, then **Download ZIP**. The file lands in your `Downloads` folder as `video-scan-main.zip`.
 
