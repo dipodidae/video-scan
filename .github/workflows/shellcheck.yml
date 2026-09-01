@@ -20,3 +20,32 @@ jobs:
           scandir: '.'
           format: gcc
           severity: warning
+
+  no-personal-paths:
+    name: No personal paths
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for hardcoded user paths
+        run: |
+          # Examples and comments must not carry a real user name. Use
+          # $env:USERPROFILE (Windows) or $HOME / ~ (Unix) instead.
+          #
+          # -I skips binary files (watermark.png would otherwise report
+          # "Binary file ... matches" and fail the job with no usable message).
+          # -o reports each occurrence separately, so a line cannot excuse a
+          # real path just because it also shows the recommended form
+          # elsewhere on the same line. Only the documented placeholders are
+          # allowed as the user-name component.
+          hits=$(grep -rIonE \
+                   '([A-Za-z]:\\+[Uu]sers\\+[A-Za-z0-9._-]+|/home/[A-Za-z0-9._-]+|/Users/[A-Za-z0-9._-]+)' \
+                   --exclude-dir=.git --exclude-dir=.github . \
+                 | grep -viE '(your-name|<user>|\$\{?USER\}?|%USERNAME%)$' || true)
+          if [ -n "$hits" ]; then
+            echo "$hits"
+            echo "::error::Hardcoded user path found. Use \$env:USERPROFILE (Windows) or \$HOME (Unix)."
+            exit 1
+          fi
+          echo "No personal paths found."

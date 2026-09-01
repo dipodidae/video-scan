@@ -18,7 +18,7 @@ Maximum number of parallel encoding jobs (default: auto-detect CPU cores / 4)
 Switch to enable timestamp blurring
 
 .EXAMPLE
-.\shrink.ps1 -FolderPath "F:\" -OutputFolder "C:\Users\tom\Documents\video-export"
+.\shrink.ps1 -FolderPath "F:\" -OutputFolder "$env:USERPROFILE\Documents\video-export"
 
 .EXAMPLE
 .\shrink.ps1 -FolderPath "F:\" -BlurTimestamp -MaxParallelJobs 5
