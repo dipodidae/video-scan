@@ -3,3 +3,4 @@ test/
 uitprobeer/
 bin/
 *.log
+dist/
