@@ -9,7 +9,7 @@ PowerShell starter for small "viewable but unusable" previews: 854x480 (480p, 16
 FFmpeg is downloaded automatically on first run (checksum-verified, unpacked into `bin\` next to the script, no admin rights, nothing installed system-wide), so this script works on a clean Windows machine with no setup.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File batch-process-videos-lowres-logo-color.ps1 -FolderPath "C:\Users\{username}\Documents\input" -OutputFolder "C:\Users\{username}\Documents\output"
+powershell -ExecutionPolicy Bypass -File batch-process-videos-lowres-logo-color.ps1 -FolderPath "$env:USERPROFILE\Documents\input" -OutputFolder "$env:USERPROFILE\Documents\output"
 ```
 
 Optional parameters:
@@ -85,7 +85,7 @@ Blurs or obscures detected faces in videos based on scan data. Requires prior fa
 
 1. **Download the scripts** - open https://github.com/dipodidae/video-scan in your browser, click the green **Code** button, then **Download ZIP**. The file lands in your `Downloads` folder as `video-scan-main.zip`.
 
-   Unzip it: right-click the ZIP in File Explorer, choose **Extract All...**, then **Extract**. You now have a folder like `C:\Users\{username}\Downloads\video-scan-main\video-scan-main` containing the scripts and `watermark.png` (the Ongehoord logo). Everything must stay together in that one folder.
+   Unzip it: right-click the ZIP in File Explorer, choose **Extract All...**, then **Extract**. You now have a folder like `$env:USERPROFILE\Downloads\video-scan-main\video-scan-main` containing the scripts and `watermark.png` (the Ongehoord logo). Everything must stay together in that one folder.
 
    > Running the scripts straight from inside the ZIP does not work - Windows needs them extracted first.
 
@@ -96,7 +96,7 @@ Blurs or obscures detected faces in videos based on scan data. Requires prior fa
 
    No such menu item? Press the **Windows key**, type `powershell`, press **Enter**, and then move to the folder by typing `cd ` (with a space) followed by the folder path, for example:
    ```powershell
-   cd "C:\Users\{username}\Downloads\video-scan-main\video-scan-main"
+   cd "$env:USERPROFILE\Downloads\video-scan-main\video-scan-main"
    ```
    You can get that path by clicking the address bar in File Explorer and copying it. Paste into PowerShell with a right-click.
 
@@ -107,12 +107,12 @@ Blurs or obscures detected faces in videos based on scan data. Requires prior fa
 
 3. **Run it** - paste this in, adjusting the two folders, and press **Enter**:
    ```powershell
-   powershell -ExecutionPolicy Bypass -File batch-process-videos-lowres-logo-color.ps1 -FolderPath "C:\Users\{username}\Documents\input" -OutputFolder "C:\Users\{username}\Documents\output"
+   powershell -ExecutionPolicy Bypass -File batch-process-videos-lowres-logo-color.ps1 -FolderPath "$env:USERPROFILE\Documents\input" -OutputFolder "$env:USERPROFILE\Documents\output"
    ```
 
-   **Change both paths before running.** Replace `{username}` with your own Windows user name - it is the name of your folder under `C:\Users\`, and you can see it by typing `echo $env:USERNAME` in PowerShell.
+   **Check both paths before running.** `$env:USERPROFILE` is filled in by PowerShell with your own user folder (`C:\Users\your-name`), so there is no user name to edit - but the input folder has to be where your videos actually are, and it has to exist.
 
-   - `-FolderPath` is the folder holding your original videos. Point it wherever they actually are: `C:\Users\{username}\Documents\input` if you copied them there first, or something like `F:\` for a memory card or external drive.
+   - `-FolderPath` is the folder holding your original videos. Point it wherever they actually are: `$env:USERPROFILE\Documents\input` if you copied them there first, or something like `F:\` for a memory card or external drive.
    - `-OutputFolder` is where the small previews are written. It is created for you if it does not exist yet, and it must not be the same folder as the input.
 
    On the first run it reports `FFmpeg not found - fetching it now (one-off, ~80 MB)`, downloads a static build, verifies its SHA-256 checksum and unpacks `ffmpeg.exe` into `bin\`. Later runs reuse it. If FFmpeg is already on your PATH that is used instead and nothing is downloaded.

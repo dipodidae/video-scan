@@ -52,7 +52,7 @@ How to fit the source into WxH: pad (black bars, default), crop, or stretch.
 Do not download FFmpeg automatically; fail with install instructions instead.
 
 .EXAMPLE
-.\batch-process-videos-lowres-logo-color.ps1 -FolderPath "C:\Users\{username}\Documents\input" -OutputFolder "C:\Users\{username}\Documents\output"
+.\batch-process-videos-lowres-logo-color.ps1 -FolderPath "$env:USERPROFILE\Documents\input" -OutputFolder "$env:USERPROFILE\Documents\output"
 
 .EXAMPLE
 .\batch-process-videos-lowres-logo-color.ps1 -FolderPath "F:\" -CRF 34 -WatermarkOpacity 0.25 -UseNVENC

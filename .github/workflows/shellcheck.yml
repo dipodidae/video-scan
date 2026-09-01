@@ -20,3 +20,22 @@ jobs:
           scandir: '.'
           format: gcc
           severity: warning
+
+  no-personal-paths:
+    name: No personal paths
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for hardcoded user paths
+        run: |
+          # Examples and comments must not carry a real user name. Use
+          # $env:USERPROFILE (Windows) or $HOME / ~ (Unix) instead.
+          if grep -rniE '([a-z]:\\+users\\+|/home/|/Users/)' \
+               --exclude-dir=.git --exclude-dir=.github . \
+             | grep -viE '(your-name|\$env:USERPROFILE|%USERPROFILE%|\$HOME|~/)'; then
+            echo "::error::Hardcoded user path found. Use \$env:USERPROFILE (Windows) or \$HOME (Unix)."
+            exit 1
+          fi
+          echo "No personal paths found."
